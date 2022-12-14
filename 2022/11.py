@@ -1,3 +1,4 @@
+import math
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -19,13 +20,15 @@ class State:
     def __init__(self):
         self.monkeys = {}
 
-    def run_round(self, divide_worry_by):
+    def run_round(self, worry_op):
         for monkey in self.monkeys.values():
             while monkey.items:
                 monkey.inspect_counter += 1
-                worry = monkey.operation(
-                    monkey.items.pop(0)
-                ) // divide_worry_by
+                worry = worry_op(
+                    monkey.operation(
+                        monkey.items.pop(0)
+                    )
+                )
                 if worry == 2080:
                     print()
                 is_divisible = not worry % monkey.modulo
@@ -34,16 +37,20 @@ class State:
 
 
 def main():
-    print("p1:", get_score(rounds=20, divide_worry_by=3))
-    print("p2:", get_score(rounds=10000, divide_worry_by=1))
-
-
-def get_score(rounds, divide_worry_by):
     state = State()
     read_input(state)
-    for i in range(rounds):
-        print(f"running round {i}/{rounds} ({(i+1) / rounds:.0%})")
-        state.run_round(divide_worry_by)
+    for i in range(20):
+        state.run_round(worry_op=lambda w: w // 3)
+    print("p1:", get_score(state))
+    state = State()
+    read_input(state)
+    mod_num = math.lcm(*[monkey.modulo for monkey in state.monkeys.values()])
+    for i in range(10000):
+        state.run_round(worry_op=lambda w: w % mod_num)
+    print("p2:", get_score(state))
+
+
+def get_score(state):
     for monkey in state.monkeys.values():
         print("monkey", monkey.index, "-", " ".join(str(x) for x in monkey.items))
     sorted_inspections = sorted(monkey.inspect_counter for monkey in state.monkeys.values())
